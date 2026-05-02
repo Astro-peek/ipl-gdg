@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/cricbuzz-proxy/:path*",
+      "destination": "https://cric-api.vercel.app/:path*"
+    },
+    {
+      "source": "/cricbuzz-site/:path*",
+      "destination": "https://www.cricbuzz.com/:path*"
+    }
+  ]
+}
