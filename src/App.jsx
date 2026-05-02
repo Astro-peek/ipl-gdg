@@ -15,7 +15,6 @@ import useMatchState from "./hooks/useMatchState"
 import { buildMatchContext, fetchFantasyPicks, fetchInsights, sendChatMessage } from "./utils/gemini"
 
 export default function App() {
-  const [apiKey, setApiKey] = useState("")
   const {
     matchState,
     updateSetup,
@@ -33,16 +32,14 @@ export default function App() {
     clearMatch
   } = useMatchState()
 
-  useEffect(() => {
-    setApiKey(localStorage.getItem("geminiApiKey") || "")
-  }, [])
+
 
   async function refreshInsights(contextState = matchState) {
     const context = buildMatchContext(contextState)
     setInsightsLoading(true)
     setInsightsError(null)
     try {
-      const nextInsights = await fetchInsights(context, apiKey)
+      const nextInsights = await fetchInsights(context)
       setInsights(nextInsights)
     } catch (error) {
       setInsightsError(error.message || "Unable to fetch insights.")
@@ -56,7 +53,7 @@ export default function App() {
     setFantasyLoading(true)
     setFantasyError(null)
     try {
-      const picks = await fetchFantasyPicks(context, apiKey)
+      const picks = await fetchFantasyPicks(context)
       setFantasyPicks(picks)
     } catch (error) {
       setFantasyError(error.message || "Unable to fetch fantasy picks.")
@@ -77,7 +74,7 @@ export default function App() {
     addChatMessage(userMessage)
     setChatLoading(true)
 
-    const reply = await sendChatMessage(nextMessages, buildMatchContext(matchState), apiKey)
+    const reply = await sendChatMessage(nextMessages, buildMatchContext(matchState))
     addChatMessage({ role: "model", parts: [{ text: reply }] })
     setChatLoading(false)
   }
@@ -101,9 +98,7 @@ export default function App() {
     }
   }
 
-  function handleApiKeyChange(nextKey) {
-    setApiKey(nextKey)
-  }
+
 
   function renderActiveTab() {
     if (matchState.activeTab === "chat") {
@@ -142,7 +137,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-bg text-slate-100">
-      <Header apiKey={apiKey} onApiKeyChange={handleApiKeyChange} matchLoaded={matchState.matchLoaded} />
+      <Header matchLoaded={matchState.matchLoaded} />
 
       {matchState.matchLoaded ? (
         <main className="mx-auto max-w-6xl space-y-4 px-4 py-6 sm:px-6">
@@ -160,7 +155,7 @@ export default function App() {
             </button>
           </div>
 
-          <ApiKeyBanner show={!apiKey.trim()} />
+
           <LiveScoreConnector onApplyScore={applyLiveScore} />
           <LiveUpdatePanel matchState={matchState} onUpdate={updateSetup} onAddBall={addBall} />
           <Scoreboard matchState={matchState} />
@@ -170,7 +165,7 @@ export default function App() {
           {renderActiveTab()}
         </main>
       ) : (
-        <MatchSetup matchState={matchState} onUpdate={updateSetup} onLoad={handleLoadMatch} apiKey={apiKey} />
+        <MatchSetup matchState={matchState} onUpdate={updateSetup} onLoad={handleLoadMatch} />
       )}
     </div>
   )

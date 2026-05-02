@@ -1,6 +1,5 @@
 import { AlertCircle } from "lucide-react"
 import { BALL_TYPES, MATCH_SITUATIONS, TEAMS, VENUES } from "../utils/teamData"
-import ApiKeyBanner from "./shared/ApiKeyBanner"
 
 function Field({ label, children }) {
   return (
@@ -15,9 +14,8 @@ function inputClass() {
   return "h-11 w-full rounded-lg border border-border bg-bg-2 px-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-600 focus:border-accent"
 }
 
-export default function MatchSetup({ matchState, onUpdate, onLoad, apiKey }) {
+export default function MatchSetup({ matchState, onUpdate, onLoad }) {
   const sameTeams = matchState.battingTeam === matchState.bowlingTeam
-  const hasApiKey = Boolean(apiKey && apiKey.trim())
   const currentBalls = matchState.currentOverBalls || []
   const bowlerFigures = `${matchState.bowler.wickets}/${matchState.bowler.runs}`
 
@@ -34,7 +32,6 @@ export default function MatchSetup({ matchState, onUpdate, onLoad, apiKey }) {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-      <ApiKeyBanner show={!hasApiKey} />
 
       <form onSubmit={handleSubmit} className="rounded-lg border border-border bg-bg-2 p-4 shadow-2xl shadow-black/20 sm:p-6">
         <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

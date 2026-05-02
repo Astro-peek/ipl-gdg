@@ -1,7 +1,6 @@
 import { calcBowlerEco, calcCRR, calcProjected, calcRRR, calcStrikeRate } from "./cricketCalc"
 
-export const GEMINI_MODEL = "gemini-2.5-flash"
-export const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
+export const GEMINI_URL = "/api/gemini"
 
 async function parseGeminiError(res) {
   try {
@@ -12,16 +11,11 @@ async function parseGeminiError(res) {
   }
 }
 
-async function callGemini(prompt, apiKey) {
-  if (!apiKey || !apiKey.trim()) {
-    throw new Error("Gemini API key is required")
-  }
-
+async function callGemini(prompt) {
   const res = await fetch(GEMINI_URL, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-      "x-goog-api-key": apiKey.trim()
+      "Content-Type": "application/json"
     },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
@@ -156,7 +150,7 @@ Last 6 balls: ${last6Balls}
 Target: ${target}`
 }
 
-export async function fetchInsights(matchContext, apiKey) {
+export async function fetchInsights(matchContext) {
   try {
     const prompt = `You are an elite IPL analyst. Based on this match:\n${matchContext}\n
 Generate exactly 5 insights as a JSON array only (no markdown, no extra text):
@@ -167,7 +161,7 @@ Generate exactly 5 insights as a JSON array only (no markdown, no extra text):
   {"tag": "FANTASY", "text": "best captain/VC pick with reason"},
   {"tag": "MILESTONE", "text": "upcoming player milestone or head-to-head fact"}
 ]`
-    const text = await callGemini(prompt, apiKey)
+    const text = await callGemini(prompt)
     const parsed = safeParseJSON(text)
     const parsedInsights = toArrayPayload(parsed, ["insights", "data", "items"])
     if (!parsedInsights.length) return fallbackInsights(matchContext, "Gemini did not return insight cards in JSON format.")
@@ -194,7 +188,7 @@ Generate exactly 5 insights as a JSON array only (no markdown, no extra text):
   }
 }
 
-export async function fetchFantasyPicks(matchContext, apiKey) {
+export async function fetchFantasyPicks(matchContext) {
   try {
     const prompt = `You are an IPL fantasy expert. Based on this match:\n${matchContext}\n
 Return top 6 fantasy picks as JSON array only (no markdown, no extra text):
@@ -208,7 +202,7 @@ Return top 6 fantasy picks as JSON array only (no markdown, no extra text):
 }]
 badge must be: 'C' for captain, 'VC' for vice-captain, or null for others.
 Exactly one 'C' and one 'VC' in the array.`
-    const text = await callGemini(prompt, apiKey)
+    const text = await callGemini(prompt)
     const parsed = safeParseJSON(text)
     const parsedPicks = toArrayPayload(parsed, ["picks", "fantasyPicks", "players", "data", "items"])
     if (!parsedPicks.length) return []
@@ -251,11 +245,8 @@ Exactly one 'C' and one 'VC' in the array.`
   }
 }
 
-export async function sendChatMessage(messages, matchContext, apiKey) {
+export async function sendChatMessage(messages, matchContext) {
   try {
-    if (!apiKey || !apiKey.trim()) {
-      throw new Error("Gemini API key is required")
-    }
 
     const contextText = `You are Gemini AI inside IPL Smart Match Companion. Use this live match context for every answer:\n${matchContext}`
     const hasContext = messages.some((message) => {
@@ -268,8 +259,7 @@ export async function sendChatMessage(messages, matchContext, apiKey) {
     const res = await fetch(GEMINI_URL, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey.trim()
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         contents,
